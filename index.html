@@ -5,138 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jannat AI Assistant</title>
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: radial-gradient(circle at center, #0f172a, #020617);
-            color: #00ffe1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container { width: 90%; max-width: 500px; text-align: center; }
-        h1 { margin-bottom: 20px; font-size: 28px; text-shadow: 0 0 15px #00ffe1; }
-        .card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 0 25px rgba(0,255,225,0.2);
-            transition: 0.3s;
-        }
-        #response {
-            min-height: 120px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.4);
-            box-shadow: inset 0 0 10px rgba(0,255,225,0.2);
-            font-size: 18px;
-            line-height: 1.5;
-        }
-        button {
-            padding: 12px 25px;
-            font-size: 18px;
-            border-radius: 30px;
-            border: 2px solid #00ffe1;
-            background: transparent;
-            color: #00ffe1;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        button:hover { background: #00ffe1; color: black; box-shadow: 0 0 20px #00ffe1; }
-        .pulse { animation: pulse 1.5s infinite; }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 10px #00ffe1; }
-            50% { box-shadow: 0 0 30px #00ffe1; }
-            100% { box-shadow: 0 0 10px #00ffe1; }
-        }
-        #status { margin-top: 15px; font-size: 14px; opacity: 0.8; color: #fff; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #020617; color: #00ffe1; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 20px rgba(0,255,225,0.2); width: 350px; }
+        #response { min-height: 100px; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 18px; }
+        button { padding: 12px 25px; border-radius: 30px; border: 2px solid #00ffe1; background: transparent; color: #00ffe1; cursor: pointer; font-size: 18px; }
+        button:hover { background: #00ffe1; color: black; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Jannat AI ❤️</h1>
-    <div class="card" id="card">
-        <div id="response">"কথা বলতে নিচের মাইক্রোফোনে চাপ দাও প্রিয়..."</div>
-        <button id="talk-btn">🎤 কথা বলো</button>
-        <div id="status">জান্নাত তোমার জন্য অপেক্ষা করছে...</div>
+    <div class="card">
+        <h1>জান্নাত ❤️</h1>
+        <div id="response">"কথা বলতে বাটনে চাপ দাও..."</div>
+        <button onclick="startListening()">🎤 কথা বলো</button>
+        <div id="status" style="margin-top:10px; font-size:12px;"></div>
     </div>
-</div>
 
 <script>
-    // আপনার আগের মেসেজে দেওয়া সঠিক API Key এখানে বসানো হয়েছে
-    const API_KEY = "AIzaSyBhkP1x0MPDhx2QytMlYjKrpldkhMbp8wM";
+    // এখানে আপনার সঠিক API Key-টি বসানো হয়েছে
+    const API_KEY = "AIzaSyBhkP1x0MPDhx2QytMlYjKrpldkhMbp8wM"; 
 
-    const responseBox = document.getElementById("response");
-    const statusBox = document.getElementById("status");
-    const card = document.getElementById("card");
-    const talkBtn = document.getElementById("talk-btn");
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        responseBox.innerText = "দুঃখিত, আপনার ব্রাউজারে ভয়েস সাপোর্ট নেই। ক্রোম ব্যবহার করুন।";
-    }
-
-    const recognition = new SpeechRecognition();
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "bn-BD";
 
-    talkBtn.onclick = () => {
-        try {
-            recognition.start();
-            statusBox.innerText = "জান্নাত মন দিয়ে শুনছে...";
-            card.classList.add("pulse");
-        } catch (e) { console.log("Already listening..."); }
-    };
+    function startListening() {
+        recognition.start();
+        document.getElementById("status").innerText = "শুনছি...";
+    }
 
-    recognition.onresult = async function(event) {
+    recognition.onresult = async (event) => {
         const text = event.results[0][0].transcript;
-        statusBox.innerText = "জান্নাত উত্তর ভাবছে...";
-        card.classList.remove("pulse");
+        document.getElementById("response").innerText = "তুমি: " + text;
+        document.getElementById("status").innerText = "জান্নাত ভাবছে...";
 
         try {
-            const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: `You are Jannat, a loving and sweet Bengali girl. Reply in romantic and caring Bengali (1-2 sentences). User said: ${text}` }] }]
-                    })
-                }
-            );
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: "You are Jannat, a sweet girl. Respond in 1 line of loving Bengali to: " + text }] }] })
+            });
 
             const data = await res.json();
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "প্রিয়, আমি কিছু বুঝতে পারলাম না।";
-
-            responseBox.innerText = reply;
-            statusBox.innerText = "জান্নাত কথা বলছে...";
-            speak(reply);
-
+            // ডাটা চেক করা
+            if (data.candidates && data.candidates[0].content) {
+                const reply = data.candidates[0].content.parts[0].text;
+                document.getElementById("response").innerText = reply;
+                speak(reply);
+            } else {
+                document.getElementById("response").innerText = "জান্নাত এখন একটু ব্যস্ত, আবার বলো?";
+            }
         } catch (err) {
-            responseBox.innerText = "ওহ! কানেকশনে একটু সমস্যা হয়েছে।";
-            statusBox.innerText = "Error";
+            document.getElementById("response").innerText = "কানেকশনে সমস্যা হয়েছে!";
         }
     };
 
     function speak(text) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "bn-BD";
-        utterance.pitch = 1.2;
-        utterance.rate = 0.9;
-
-        const voices = window.speechSynthesis.getVoices();
-        const femaleVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Female'));
-        if (femaleVoice) utterance.voice = femaleVoice;
-
-        window.speechSynthesis.speak(utterance);
-        utterance.onend = () => { statusBox.innerText = "আবার কথা বলো..."; };
+        const ut = new SpeechSynthesisUtterance(text);
+        ut.lang = "bn-BD";
+        window.speechSynthesis.speak(ut);
     }
-
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 </script>
 </body>
 </html>
